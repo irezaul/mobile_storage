@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4">
+
+  <div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+
+      <div class="bg-gradient-to-r from-green-600 to-teal-600 text-white p-6 text-center">
+        <h1 class="text-3xl font-bold">Admin Panel</h1>
+        <button onclick="logout()" class="mt-4 px-6 py-3 bg-red-600 rounded-full hover:bg-red-700">Logout</button>
+      </div>
+
+      <!-- Add Product -->
+      <div class="p-6 bg-gray-50 border-b">
+        <div class="flex gap-3">
+          <input type="text" id="productInput" placeholder="Add new product..." class="flex-1 px-5 py-4 rounded-xl border-2 focus:border-green-500 text-lg">
+          <button onclick="addProduct()" class="px-8 py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700">Add</button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="p-6">
+        <input type="text" id="searchInput" placeholder="Search products..." class="w-full px-6 py-5 text-lg rounded-2xl border-2 focus:border-purple-500">
+      </div>
+
+      <div id="productList" class="px-6 pb-8 space-y-4 max-h-screen overflow-y-auto">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check if admin is logged in
+    if (localStorage.getItem('adminLoggedIn') !== 'true') {
+      alert("Access Denied! Login first");
+      window.location.href = 'index.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('adminLoggedIn');
+      window.location.href = 'index.html';
+    }
+
+    function getProducts() {
+      return JSON.parse(localStorage.getItem('products') || '[]');
+    }
+
+    function addProduct() {
+      const name = document.getElementById('productInput').value.trim();
+      if (!name) return alert("Enter product name");
+      const products = getProducts();
+      products.push({ id: Date.now(), name });
+      localStorage.setItem('products', JSON.stringify(products));
+      document.getElementById('productInput').value = '';
+      showProducts();
+    }
+
+    function deleteProduct(id) {
+      if (confirm("Delete this product permanently?")) {
+        let products = getProducts().filter(p => p.id !== id);
+        localStorage.setItem('products', JSON.stringify(products));
+        showProducts();
+      }
+    }
+
+    function showProducts() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      let products = getProducts();
+      if (query) products = products.filter(p => p.name.toLowerCase().includes(query));
+
+      const list = document.getElementById('productList');
+      if (products.length === 0) {
+        list.innerHTML = `<div class="text-center py-20 text-gray-600 text-xl">No products</div>`;
+        return;
+      }
+
+      list.innerHTML = products.map(p => `
+        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl flex justify-between items-center">
+          <h3 class="text-xl font-bold">${p.name}</h3>
+          <button onclick="deleteProduct(${p.id})" class="p-3 bg-red-500 text-white rounded-full hover:bg-red-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', showProducts);
+    showProducts();
+  </script>
+</body>
+</html>
